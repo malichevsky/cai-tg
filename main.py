@@ -136,7 +136,6 @@ async def ensure_session():
 
 async def get_bot_reply(text: str) -> tuple[str, str | None, str | None]:
     """Send a message and return (reply_text, bot_turn_id, bot_candidate_id)."""
-    global cai_client, cai_chat_id, cai_greeting
     await ensure_session()
     if STREAMER_MODE:
         logger.info("→ CAI: [HIDDEN IN STREAMER MODE]")
