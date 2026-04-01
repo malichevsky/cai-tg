@@ -14,6 +14,7 @@ It features a **native cross-platform GUI** built with PyQt6 that lets you manag
 - **Persona Context**: Apply optional user Persona IDs to provide context directly to the Character.
 - **Secured Access**: The bot is strictly locked to your personal Telegram User ID to prevent unauthorized users from chatting with it or leaking your session keys.
 - **Enhanced privacy**: Toggle streamer mode to hide sensitive information from logs (tokens, chat IDs, etc.) and restrict access to the bot to only the owner by default.
+- **Auto-update**: The script will automatically check for updates from the GitHub repository and notify you if there are any updates available. (Notification system is planned and will be implemented in the future.)
 
 ## Setup & Launching
 
@@ -140,3 +141,13 @@ To make the script and the bot work you need to get the following tokens, here i
 - [PyCharacterAI](https://github.com/Xtr4F/PyCharacterAI)
 - [PyQt6](https://github.com/PyQt6/PyQt6)
 - [rich](https://github.com/Textualize/rich)
+
+## To-do
+
+- [ ] Add notification system for updates, bot shutdowns, restores and other events instead of sending as a Telegram message.
+- [ ] Add automated way to extract tokens and IDs from specific files (probably HAL files).
+- [ ] Add support to recognize voice messages sent from user and reply with voice messages.
+- [ ] Add support to recognize images sent from user and reply with images.
+- [ ] Add support for multiple characters.
+- [ ] Support for Android devices??
+- [ ] Fix `/persona` command because right now it produces an error. It should display the current persona ID and allow to change it.
