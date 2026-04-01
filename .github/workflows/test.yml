@@ -36,5 +36,6 @@ jobs:
       - name: Run Pytest Test Suite
         env:
           QT_QPA_PLATFORM: offscreen # Required for testing PyQt6 headless
+          PYTHONPATH: . # Let pytest find main.py and gui.py at repository root
         run: |
           pytest tests/ -v --asyncio-mode=auto
