@@ -455,32 +455,19 @@ async def on_startup(bot: Bot):
     ])
     logger.info("Bot commands registered with Telegram.")
 
-    # Notify owner that the bot is online
-    if OWNER_ID:
-        try:
-            startup_text = cai_greeting or "hey, i'm back."
-            await bot.send_message(int(OWNER_ID), startup_text)
-            if STREAMER_MODE:
-                logger.info("Startup message sent to owner [HIDDEN].")
-            else:
-                logger.info(f"Startup message sent to owner {OWNER_ID}.")
-        except Exception as e:
-            logger.warning(f"Could not send startup notification: {e}")
+    # Notify desktop that the bot is online (intercepted by gui.py)
+    startup_text = cai_greeting or "Ready to chat!"
+    # Ensure this prints immediately so gui.py can intercept it
+    print(f"[SYSTEM_NOTIFY:CAI-TG Online] {startup_text}", flush=True)
+    if STREAMER_MODE:
+        logger.info("Startup notification sent.")
+    else:
+        logger.info(f"Startup notification sent: {startup_text[:40]}...")
 
 async def on_shutdown(bot: Bot):
-    """Notify the owner when the bot is shutting down."""
-    if OWNER_ID:
-        try:
-            await bot.send_message(
-                int(OWNER_ID),
-                "⚠️ The bot is going offline. restart the script to bring it back."
-            )
-            if STREAMER_MODE:
-                logger.info("Shutdown notification sent to owner [HIDDEN].")
-            else:
-                logger.info(f"Shutdown notification sent to owner {OWNER_ID}.")
-        except Exception as e:
-            logger.warning(f"Could not send shutdown notification: {e}")
+    """Notify when the bot is shutting down."""
+    print("[SYSTEM_NOTIFY:CAI-TG Offline] The bot is shutting down.", flush=True)
+    logger.info("Shutdown notification sent.")
     await bot.session.close()
 
 
@@ -500,3 +487,6 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logger.info("The bot is going to sleep. Bye!")
+    except Exception as e:
+        print(f"[SYSTEM_NOTIFY:Critical Error] {str(e)}", flush=True)
+        logger.error(f"Critical Error: {e}", exc_info=True)

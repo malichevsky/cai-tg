@@ -18,9 +18,9 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTabWidget, QLabel, QLineEdit, QPushButton, QComboBox,
     QTextEdit, QFormLayout, QMessageBox, QInputDialog, QToolButton,
-    QWizard, QWizardPage, QSpinBox, QCheckBox
+    QWizard, QWizardPage, QSpinBox, QCheckBox, QSystemTrayIcon, QStyle
 )
-from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor, QFont
+from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor, QFont, QIcon
 from PyQt6.QtCore import QProcess, pyqtSlot, Qt, QProcessEnvironment
 
 PROFILES_DIR = Path("profiles")
@@ -205,8 +205,15 @@ class MainWindow(QMainWindow):
         self.bot_process.stateChanged.connect(self.handle_state_changed)
         self.bot_process.finished.connect(self.handle_finished)
 
+        self.init_tray()
         self.init_ui()
         self.load_profiles()
+
+    def init_tray(self):
+        self.tray_icon = QSystemTrayIcon(self)
+        icon = self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
+        self.tray_icon.setIcon(icon)
+        self.tray_icon.show()
 
     def init_ui(self):
         central_widget = QWidget()
@@ -502,6 +509,18 @@ class MainWindow(QMainWindow):
 
     def handle_stdout(self):
         data = self.bot_process.readAllStandardOutput().data().decode("utf-8", errors="replace")
+        
+        # Intercept and display system notifications
+        for line in data.splitlines():
+            if line.startswith("[SYSTEM_NOTIFY:"):
+                try:
+                    tag_end = line.index("]")
+                    title = line[15:tag_end]
+                    message = line[tag_end+1:].strip()
+                    self.tray_icon.showMessage(title, message, QSystemTrayIcon.MessageIcon.Information, 5000)
+                except ValueError:
+                    pass
+                    
         self.colorize_and_append(data)
 
     def handle_stderr(self):
