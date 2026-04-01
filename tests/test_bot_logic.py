@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 
 # Configure fake environment BEFORE importing main
-os.environ["TG_TOKEN"] = "dummy_token"
+os.environ["TG_TOKEN"] = "123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789"
 os.environ["CAI_TOKEN"] = "dummy_cai_token"
 os.environ["NEXT_AUTH"] = "dummy_next_auth"
 os.environ["CHAR_ID"] = "dummy_char_id"
