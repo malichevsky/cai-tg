@@ -7,13 +7,13 @@ It features a **native cross-platform GUI** built with PyQt6 that lets you manag
 ## Features
 
 - **Profile Manager GUI**: Easily switch between multiple character configurations (saved in the `profiles/` directory) without touching code.
-- **Universal Bootstrapper**: One script magically hooks up the entire environment across Windows, MacOS, and Linux.
+- **Bundled Executables**: Don't worry about installing Python or dependencies, just download the latest release from the [Releases](https://github.com/malichevsky/cai-tg/releases) page and run the executable. (or use `start.py` to run the script with Python).
 - **Text & Voice Chat**: Send your Character messages and receive text responses with occasional voice replies, if the voice ID is provided (you also can set the probability of voice replies in the GUI).
 - **Chat Management**: Use straightforward Telegram commands to manage your ongoing CAI session.
 - **Persistent State**: The bot dynamically creates or resumes chat sessions.
 - **Persona Context**: Apply optional user Persona IDs to provide context directly to the Character.
 - **Secured Access**: The bot is strictly locked to your personal Telegram User ID to prevent unauthorized users from chatting with it or leaking your session keys.
-- **Enhanced privacy**: Toggle streamer mode to hide sensitive information from logs (tokens, chat IDs, etc.) and restrict access to the bot to only the owner by default.
+- **Enhanced privacy**: Toggle streamer mode to hide sensitive information from logs (tokens, chat IDs, etc.).
 - **Auto-update**: The script will automatically check for updates from the GitHub repository and notify you if there are any updates available. (Notification system is planned and will be implemented in the future.)
 
 ## Setup & Launching
@@ -31,6 +31,8 @@ You have a few ways to install this script:
    ```
 
 2. **Download**: Download the script by pressing the Code button on the GitHub page and selecting Download ZIP.
+
+3. **GitHub Releases**: You can download the latest release from the [Releases](https://github.com/malichevsky/cai-tg/releases) page.
 
 **Run the Universal Launcher:**
 
