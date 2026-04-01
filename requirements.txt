@@ -1,0 +1,4 @@
+aiogram
+PyCharacterAI
+python-dotenv
+PyQt6

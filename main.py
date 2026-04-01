@@ -11,20 +11,26 @@ from aiogram.filters import Command
 from aiogram.utils.chat_action import ChatActionSender
 from PyCharacterAI import get_client
 
-# --- Setup ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+import sys
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
-load_dotenv()
+env_path = os.environ.get("PROFILE_ENV_PATH", ".env")
+load_dotenv(env_path)
 TG_TOKEN   = os.getenv("TG_TOKEN")
 CAI_TOKEN  = os.getenv("CAI_TOKEN")
 NEXT_AUTH  = os.getenv("NEXT_AUTH")
 CHAR_ID    = os.getenv("CHAR_ID")
 VOICE_ID   = os.getenv("VOICE_ID")   # optional — needed for voice messages
+try:
+    VOICE_PROBABILITY = float(os.getenv("VOICE_PROBABILITY", "25")) / 100.0
+except ValueError:
+    VOICE_PROBABILITY = 0.25
 PERSONA_ID = os.getenv("PERSONA_ID") # optional — set who "you" are to the Character
-OWNER_ID   = os.getenv("OWNER_ID")   # optional — your Telegram user ID for shutdown alerts
+OWNER_ID   = os.getenv("OWNER_ID")   # required — your Telegram user ID to prevent unauthorized access
+STREAMER_MODE = os.getenv("STREAMER_MODE", "False").lower() == "true"
 
-for name, val in {"TG_TOKEN": TG_TOKEN, "CAI_TOKEN": CAI_TOKEN, "CHAR_ID": CHAR_ID}.items():
+for name, val in {"TG_TOKEN": TG_TOKEN, "CAI_TOKEN": CAI_TOKEN, "CHAR_ID": CHAR_ID, "OWNER_ID": OWNER_ID}.items():
     if not val:
         raise EnvironmentError(f"Missing required env variable: {name}")
 
@@ -35,7 +41,10 @@ class OwnerOnlyMiddleware(BaseMiddleware):
         if not OWNER_ID or event.from_user.id == int(OWNER_ID):
             return await handler(event, data)
         else:
-            logger.warning(f"Unauthorized access attempt from {event.from_user.id} (@{event.from_user.username})")
+            if STREAMER_MODE:
+                logger.warning("Unauthorized access attempt from [HIDDEN]")
+            else:
+                logger.warning(f"Unauthorized access attempt from {event.from_user.id} (@{event.from_user.username})")
             return
 
 # --- Persistent CAI state ---
@@ -87,8 +96,11 @@ async def init_cai(force_new: bool = False):
             if chats:
                 cai_chat_id  = chats[0].chat_id
                 cai_greeting = None   # no greeting when resuming an existing chat
-                logger.info(f"Resumed existing chat. chat_id={cai_chat_id} "
-                            f"({len(chats)} total chats found)")
+                if STREAMER_MODE:
+                    logger.info(f"Resumed existing chat. ({len(chats)} total chats found)")
+                else:
+                    logger.info(f"Resumed existing chat. chat_id={cai_chat_id} "
+                                f"({len(chats)} total chats found)")
                 return
             logger.info("No existing chats found — will create a new one.")
         except Exception as e:
@@ -99,10 +111,16 @@ async def init_cai(force_new: bool = False):
     chat, greeting_turn = await cai_client.chat.create_chat(CHAR_ID)
     cai_chat_id  = chat.chat_id
     cai_greeting = greeting_turn.get_primary_candidate().text if greeting_turn else None
-    logger.info(f"New chat created. chat_id={cai_chat_id}")
+    if STREAMER_MODE:
+        logger.info("New chat created.")
+    else:
+        logger.info(f"New chat created. chat_id={cai_chat_id}")
     if cai_greeting:
-        logger.info(f"Greeting ({len(cai_greeting)} chars): "
-                    f"{cai_greeting[:80]}{'...' if len(cai_greeting) > 80 else ''}")
+        if STREAMER_MODE:
+            logger.info("Greeting: [HIDDEN IN STREAMER MODE]")
+        else:
+            logger.info(f"Greeting ({len(cai_greeting)} chars): "
+                        f"{cai_greeting[:80]}{'...' if len(cai_greeting) > 80 else ''}")
 
 
 async def ensure_session():
@@ -120,14 +138,20 @@ async def get_bot_reply(text: str) -> tuple[str, str | None, str | None]:
     """Send a message and return (reply_text, bot_turn_id, bot_candidate_id)."""
     global cai_client, cai_chat_id, cai_greeting
     await ensure_session()
-    logger.info(f"→ CAI: {text[:60]}{'...' if len(text) > 60 else ''}")
+    if STREAMER_MODE:
+        logger.info("→ CAI: [HIDDEN IN STREAMER MODE]")
+    else:
+        logger.info(f"→ CAI: {text[:60]}{'...' if len(text) > 60 else ''}")
     try:
         answer         = await cai_client.chat.send_message(CHAR_ID, cai_chat_id, text)
         candidate      = answer.get_primary_candidate()
         reply          = candidate.text
         bot_turn_id = answer.turn_id
         candidate_id   = candidate.candidate_id
-        logger.info(f"← CAI ({len(reply)} chars): {reply[:80]}{'...' if len(reply) > 80 else ''}")
+        if STREAMER_MODE:
+            logger.info("← CAI: [HIDDEN IN STREAMER MODE]")
+        else:
+            logger.info(f"← CAI ({len(reply)} chars): {reply[:80]}{'...' if len(reply) > 80 else ''}")
         return reply, bot_turn_id, candidate_id
     except Exception as e:
         logger.error(f"send_message failed: {e}", exc_info=True)
@@ -144,7 +168,7 @@ async def maybe_send_voice(tg_message: types.Message,
     """
     if not VOICE_ID or not bot_turn_id or not candidate_id:
         return False
-    if random.random() > 0.25:
+    if random.random() > VOICE_PROBABILITY:
         return False
 
     logger.info(f"Generating voice for turn {bot_turn_id}...")
@@ -210,7 +234,10 @@ async def retry_handler(message: types.Message):
         last_turn["bot_turn_id"]      = answer.turn_id
         last_turn["bot_candidate_id"] = candidate.candidate_id
 
-        logger.info(f"← retry ({len(reply)} chars): {reply[:80]}")
+        if STREAMER_MODE:
+            logger.info("← retry: [HIDDEN IN STREAMER MODE]")
+        else:
+            logger.info(f"← retry ({len(reply)} chars): {reply[:80]}")
         try:
             await status_msg.edit_text(f"🔄 {reply}")
         except TelegramBadRequest:
@@ -383,8 +410,11 @@ async def chat_handler(message: types.Message):
                      f"(type: {message.content_type})")
         return
 
-    logger.info(f"↑ {message.from_user.id} (@{message.from_user.username}): "
-                f"{message.text[:60]}{'...' if len(message.text) > 60 else ''}")
+    if STREAMER_MODE:
+        logger.info("↑ [HIDDEN USER]: [HIDDEN IN STREAMER MODE]")
+    else:
+        logger.info(f"↑ {message.from_user.id} (@{message.from_user.username}): "
+                    f"{message.text[:60]}{'...' if len(message.text) > 60 else ''}")
 
     async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):
         reply, bot_turn_id, candidate_id = await get_bot_reply(message.text)
@@ -431,7 +461,10 @@ async def on_startup(bot: Bot):
         try:
             startup_text = cai_greeting or "hey, i'm back."
             await bot.send_message(int(OWNER_ID), startup_text)
-            logger.info(f"Startup message sent to owner {OWNER_ID}.")
+            if STREAMER_MODE:
+                logger.info("Startup message sent to owner [HIDDEN].")
+            else:
+                logger.info(f"Startup message sent to owner {OWNER_ID}.")
         except Exception as e:
             logger.warning(f"Could not send startup notification: {e}")
 
@@ -443,7 +476,10 @@ async def on_shutdown(bot: Bot):
                 int(OWNER_ID),
                 "⚠️ The bot is going offline. restart the script to bring it back."
             )
-            logger.info(f"Shutdown notification sent to owner {OWNER_ID}.")
+            if STREAMER_MODE:
+                logger.info("Shutdown notification sent to owner [HIDDEN].")
+            else:
+                logger.info(f"Shutdown notification sent to owner {OWNER_ID}.")
         except Exception as e:
             logger.warning(f"Could not send shutdown notification: {e}")
     await bot.session.close()
