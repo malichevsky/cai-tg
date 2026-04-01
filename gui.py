@@ -1,5 +1,15 @@
 import sys
 import os
+
+if len(sys.argv) > 1 and sys.argv[1] == "--bot":
+    import asyncio
+    import main
+    try:
+        asyncio.run(main.main())
+    except (KeyboardInterrupt, SystemExit):
+        pass
+    sys.exit(0)
+
 import re
 from pathlib import Path
 from dotenv import dotenv_values, set_key
@@ -461,8 +471,15 @@ class MainWindow(QMainWindow):
         process_env.insert("PROFILE_ENV_PATH", str(env_path.absolute()))
         self.bot_process.setProcessEnvironment(process_env)
 
-        python_exec = sys.executable
-        self.bot_process.start(python_exec, ["main.py"])
+        if getattr(sys, 'frozen', False):
+            # Running within PyInstaller bundle
+            python_exec = sys.executable
+            args = ["--bot"]
+        else:
+            python_exec = sys.executable
+            args = ["main.py"]
+
+        self.bot_process.start(python_exec, args)
 
     def stop_bot(self):
         if self.bot_process.state() == QProcess.ProcessState.Running:
