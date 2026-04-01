@@ -490,3 +490,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[SYSTEM_NOTIFY:Critical Error] {str(e)}", flush=True)
         logger.error(f"Critical Error: {e}", exc_info=True)
+
+# just as a test if build is working...
