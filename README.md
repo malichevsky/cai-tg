@@ -54,6 +54,17 @@ Once the GUI opens:
 3. Hit **Save Settings**.
 4. Click **▶ Start Bot**. Switch to the **Console** tab to watch the live colorized event logs!
 
+## Reporting an Issue?
+
+If you encounter any issues while using the script, feel free to report them by creating an issue on the GitHub repository. Make sure to include:
+
+- A detailed description of the problem
+- The steps to reproduce the issue
+- Any error messages or logs (screenshots are welcome)
+- Your operating system and Python version
+
+Any other suggestions, help, discussions or feature requests are also welcome, we are open to any feedback!
+
 ## Useful Telegram Commands
 
 While chatting with your bot on Telegram, you can use these commands to manage the CAI connection:
