@@ -131,3 +131,12 @@ To make the script and the bot work you need to get the following tokens, here i
    - Select **Edit Character**.
    - In the character settings, look for the **Persona** option. Click on it to see a list of available personas.
    - Select the persona you want to use. The Persona ID will be displayed in the URL of the persona selection page or in the browser's developer tools when the persona is selected.
+
+## Credits
+
+`cai-tg` is built using the following amazing open-source libraries, without them, it wouldn't be possible to create this project. We thank the authors of these libraries for their great work:
+
+- [aiogram](https://github.com/aiogram/aiogram)
+- [PyCharacterAI](https://github.com/Xtr4F/PyCharacterAI)
+- [PyQt6](https://github.com/PyQt6/PyQt6)
+- [rich](https://github.com/Textualize/rich)

@@ -244,6 +244,7 @@ class MainWindow(QMainWindow):
 
         self.init_console_tab()
         self.init_settings_tab()
+        self.init_about_tab()
 
     def init_console_tab(self):
         console_widget = QWidget()
@@ -311,6 +312,30 @@ class MainWindow(QMainWindow):
 
         layout.addStretch()
         self.tabs.addTab(settings_widget, "Settings")
+
+    def init_about_tab(self):
+        about_widget = QWidget()
+        layout = QVBoxLayout(about_widget)
+
+        credits_label = QLabel(
+            "<h2>CAI-TG Bot Manager</h2>"
+            "<p>A native cross-platform GUI for bridging Telegram bots to Character.AI.</p>"
+            "<h3>Credits</h3>"
+            "<p>This project uses the following amazing open-source libraries, without them, it wouldn't be possible to create this project. We thank the authors of these libraries for their great work:</p>"
+            "<ul>"
+            "<li><b>aiogram</b>: <a href='https://github.com/aiogram/aiogram' style='color: #4dd0e1;'>https://github.com/aiogram/aiogram</a></li>"
+            "<li><b>PyCharacterAI</b>: <a href='https://github.com/Xtr4F/PyCharacterAI' style='color: #4dd0e1;'>https://github.com/Xtr4F/PyCharacterAI</a></li>"
+            "<li><b>PyQt6</b>: <a href='https://github.com/PyQt6/PyQt6' style='color: #4dd0e1;'>https://github.com/PyQt6/PyQt6</a></li>"
+            "<li><b>rich</b>: <a href='https://github.com/Textualize/rich' style='color: #4dd0e1;'>https://github.com/Textualize/rich</a></li>"
+            "</ul>"
+        )
+        credits_label.setOpenExternalLinks(True)
+        credits_label.setWordWrap(True)
+        
+        layout.addWidget(credits_label)
+        layout.addStretch()
+
+        self.tabs.addTab(about_widget, "About")
 
     def load_profiles(self):
         self.profile_combo.blockSignals(True)
