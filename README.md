@@ -1,6 +1,6 @@
 # CAI-TG (Character.AI Telegram Bridge)
 
-This project acts as a functional bridge connecting a Telegram bot to a [Character.AI](https://character.ai/) persona. Built using Python, `aiogram`, and `PyCharacterAI`, it allows you to communicate seamlessly with your favorite CAI characters straight from Telegram text and voice messages.
+This script acts as a functional bridge connecting a Telegram bot to a [Character.AI](https://character.ai/) persona. Built using Python, `aiogram`, and `PyCharacterAI`, it allows you to communicate seamlessly with your favorite CAI characters straight from Telegram text and voice messages.
 
 It features a **native cross-platform GUI** built with PyQt6 that lets you manage multiple character profiles, edit tokens easily, and monitor the bot's live standard output with syntax highlighting!
 
@@ -8,16 +8,28 @@ It features a **native cross-platform GUI** built with PyQt6 that lets you manag
 
 - **Profile Manager GUI**: Easily switch between multiple character configurations (saved in the `profiles/` directory) without touching code.
 - **Universal Bootstrapper**: One script magically hooks up the entire environment across Windows, MacOS, and Linux.
-- **Text & Voice Chat**: Send your Character messages and receive text responses with occasional voice replies.
+- **Text & Voice Chat**: Send your Character messages and receive text responses with occasional voice replies, if the voice ID is provided (you also can set the probability of voice replies in the GUI).
 - **Chat Management**: Use straightforward Telegram commands to manage your ongoing CAI session.
 - **Persistent State**: The bot dynamically creates or resumes chat sessions.
 - **Persona Context**: Apply optional user Persona IDs to provide context directly to the Character.
 - **Secured Access**: The bot is strictly locked to your personal Telegram User ID to prevent unauthorized users from chatting with it or leaking your session keys.
-- **Enhanced privacy**: Toggle streamer mode to hide sensitive information from logs (tokens, chat IDs, etc.)
+- **Enhanced privacy**: Toggle streamer mode to hide sensitive information from logs (tokens, chat IDs, etc.) and restrict access to the bot to only the owner by default.
 
 ## Setup & Launching
 
 You do **NOT** need to manually install dependencies or manually create `.env` files. The project includes a universal `start.py` bootstrapper that handles everything automatically.
+
+**Install the script:**
+
+You have a few ways to install this script:
+
+1. **Git**: Run this command in your terminal or command prompt (requires Git installed)
+
+   ```bash
+   git clone https://github.com/malichevsky/cai-tg.git
+   ```
+
+2. **Download**: Download the script by pressing the Code button on the GitHub page and selecting Download ZIP.
 
 **Run the Universal Launcher:**
 
