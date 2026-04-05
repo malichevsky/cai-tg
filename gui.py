@@ -328,11 +328,11 @@ class PageWelcome(QWizardPage):
         self.terms_cb.stateChanged.connect(self.completeChanged)
         layout.addWidget(self.terms_cb)
         
-        self.timer_label = QLabel("Please carefully read the warning. You can proceed in 20 seconds.")
+        self.timer_label = QLabel("Please carefully read the warning. You can proceed in 30 seconds.")
         self.timer_label.setStyleSheet("color: #ffb74d; font-weight: bold;")
         layout.addWidget(self.timer_label)
         
-        self.counter = 20
+        self.counter = 30
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_timer)
         self.timer.start(1000)
