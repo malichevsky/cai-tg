@@ -304,29 +304,41 @@ class PageWelcome(QWizardPage):
         inst = QLabel(
             "<b>CAI-TG</b> runs a local bot on your machine that connects your Telegram account to Character.AI, allowing you to chat directly from Telegram.<br><br>"
             "<b>SECURITY WARNING:</b><br>"
-            "This application handles highly sensitive session tokens that give full access to your Character.AI and Telegram accounts. Using modified or unofficial versions can result in your accounts being compromised.<br><br>"
+            "This application handles highly sensitive session tokens that give full access to your Character.AI and Telegram accounts, especially if you pay for Character.AI Plus or any paid subscriptions. Using modified or unofficial versions can result in your accounts being compromised by malicious actors.<br><br>"
             "You must ensure that you downloaded this program from the <b>only reputable source</b>:<br>"
             "<b>github.com/malichevsky/cai-tg</b>"
         )
         inst.setWordWrap(True)
         layout.addWidget(inst)
         
+        ban_warning = QLabel(
+            "<br><b>TERMS OF USAGE WARNING:</b><br>"
+            "Even though no one has reported being banned for using this script, it is still against Character.AI's Terms of Service to use any third-party tools to interact with unofficial APIs we use. Use it at your own risk. Please, do not make any complaints to us if you get banned, because once you pressed \"Continue\" button in First Time Setup Wizard you automatically agree that you are using this script at your own risk and we are not responsible for any consequences. Note that we are not affiliated with Character.AI in any way, neither the original author of PyCharacterAI. We do not condone the use of this script for any malicious or for any other purposes that may violate Character.AI's Terms of Service, such as bypassing NSFW filters, etc. If you fear that your account may get banned, we recommend you to use a different account specifically for this script, otherwise press \"Cancel\" button and do not use this script."
+        )
+        ban_warning.setWordWrap(True)
+        layout.addWidget(ban_warning)
+        
         self.confirm_cb = QCheckBox("I confirm I installed this from malichevsky/cai-tg")
         self.confirm_cb.setEnabled(False)
         self.confirm_cb.stateChanged.connect(self.completeChanged)
         layout.addWidget(self.confirm_cb)
         
-        self.timer_label = QLabel("Please carefully read the warning. You can proceed in 10 seconds.")
+        self.terms_cb = QCheckBox("I willingly agree to such terms of usage and use it at my own risk")
+        self.terms_cb.setEnabled(False)
+        self.terms_cb.stateChanged.connect(self.completeChanged)
+        layout.addWidget(self.terms_cb)
+        
+        self.timer_label = QLabel("Please carefully read the warning. You can proceed in 20 seconds.")
         self.timer_label.setStyleSheet("color: #ffb74d; font-weight: bold;")
         layout.addWidget(self.timer_label)
         
-        self.counter = 10
+        self.counter = 20
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_timer)
         self.timer.start(1000)
 
     def isComplete(self):
-        return self.confirm_cb.isChecked()
+        return self.confirm_cb.isChecked() and self.terms_cb.isChecked()
 
     def update_timer(self):
         self.counter -= 1
@@ -337,6 +349,7 @@ class PageWelcome(QWizardPage):
             self.timer_label.setText("You may now proceed.")
             self.timer_label.setStyleSheet("color: #81c784; font-weight: bold;")
             self.confirm_cb.setEnabled(True)
+            self.terms_cb.setEnabled(True)
 
 class PageTelegram(QWizardPage):
     def __init__(self):
@@ -470,8 +483,9 @@ class OOBEWizard(QWizard):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("CAI-TG First-Time Setup")
-        self.resize(700, 500)
+        self.resize(800, 650)
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
+        self.setButtonText(QWizard.WizardButton.NextButton, "Continue")
         
         self.addPage(PageWelcome())
         self.addPage(PageTelegram())
