@@ -75,7 +75,7 @@ jobs:
       run: |
         export CLEAN_TAG=${RAW_TAG#v}
         echo "Injecting version $CLEAN_TAG into gui.py..."
-        python -c "import re, os; c = open('gui.py').read(); c = re.sub(r'VERSION = \".*?\"', f'VERSION = \"{os.environ[\"CLEAN_TAG\"]}\"', c); open('gui.py', 'w').write(c)"
+        python -c "import re, os; c = open('gui.py', encoding='utf-8').read(); c = re.sub(r'VERSION = \".*?\"', f'VERSION = \"{os.environ[\"CLEAN_TAG\"]}\"', c); open('gui.py', 'w', encoding='utf-8').write(c)"
 
     - name: Build with PyInstaller
       run: |
