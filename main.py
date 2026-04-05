@@ -30,6 +30,7 @@ PERSONA_ID = os.getenv("PERSONA_ID") # optional — set who "you" are to the Cha
 OWNER_ID   = os.getenv("OWNER_ID")   # required — your Telegram user ID to prevent unauthorized access
 STREAMER_MODE = os.getenv("STREAMER_MODE", "False").lower() == "true"
 
+
 for name, val in {"TG_TOKEN": TG_TOKEN, "CAI_TOKEN": CAI_TOKEN, "CHAR_ID": CHAR_ID, "OWNER_ID": OWNER_ID}.items():
     if not val:
         raise EnvironmentError(f"Missing required env variable: {name}")
@@ -138,9 +139,9 @@ async def get_bot_reply(text: str) -> tuple[str, str | None, str | None]:
     """Send a message and return (reply_text, bot_turn_id, bot_candidate_id)."""
     await ensure_session()
     if STREAMER_MODE:
-        logger.info("→ CAI: [HIDDEN IN STREAMER MODE]")
+        logger.info("-> CAI: [HIDDEN IN STREAMER MODE]")
     else:
-        logger.info(f"→ CAI: {text[:60]}{'...' if len(text) > 60 else ''}")
+        logger.info(f"-> CAI: {text[:60]}{'...' if len(text) > 60 else ''}")
     try:
         answer         = await cai_client.chat.send_message(CHAR_ID, cai_chat_id, text)
         candidate      = answer.get_primary_candidate()
@@ -148,9 +149,9 @@ async def get_bot_reply(text: str) -> tuple[str, str | None, str | None]:
         bot_turn_id = answer.turn_id
         candidate_id   = candidate.candidate_id
         if STREAMER_MODE:
-            logger.info("← CAI: [HIDDEN IN STREAMER MODE]")
+            logger.info("<- CAI: [HIDDEN IN STREAMER MODE]")
         else:
-            logger.info(f"← CAI ({len(reply)} chars): {reply[:80]}{'...' if len(reply) > 80 else ''}")
+            logger.info(f"<- CAI ({len(reply)} chars): {reply[:80]}{'...' if len(reply) > 80 else ''}")
         return reply, bot_turn_id, candidate_id
     except Exception as e:
         logger.error(f"send_message failed: {e}", exc_info=True)
@@ -158,13 +159,14 @@ async def get_bot_reply(text: str) -> tuple[str, str | None, str | None]:
         return "The character's brain stalled for a sec... try again?", None, None
 
 
-async def maybe_send_voice(tg_message: types.Message,
+async def maybe_send_voice(tg_message: types.Message, 
                            bot_turn_id: str | None,
                            candidate_id: str | None) -> bool:
     """Occasionally send a voice message (25% chance per reply).
     Returns True if a voice was sent successfully.
     Requires VOICE_ID to be set in .env.
     """
+    # by default it is 25% but you can change it directly in the GUI or turn it off completely by setting 0%
     if not VOICE_ID or not bot_turn_id or not candidate_id:
         return False
     if random.random() > VOICE_PROBABILITY:
@@ -192,7 +194,7 @@ async def maybe_send_voice(tg_message: types.Message,
 async def start_handler(message: types.Message):
     logger.info(f"/start from {message.from_user.id} (@{message.from_user.username})")
     # cai_greeting is only set after create_chat (fresh or /reset).
-    # On a resumed session it's None — no greeting object exists, so just say we're back.
+    # On a resumed session it's None — no greeting object exists, so just say we're back. It is not the best solution, I know.
     text = cai_greeting or "hey, i'm back."
     await message.answer(text)
 
@@ -234,9 +236,9 @@ async def retry_handler(message: types.Message):
         last_turn["bot_candidate_id"] = candidate.candidate_id
 
         if STREAMER_MODE:
-            logger.info("← retry: [HIDDEN IN STREAMER MODE]")
+            logger.info("<- retry: [HIDDEN IN STREAMER MODE]")
         else:
-            logger.info(f"← retry ({len(reply)} chars): {reply[:80]}")
+            logger.info(f"<- retry ({len(reply)} chars): {reply[:80]}")
         try:
             await status_msg.edit_text(f"🔄 {reply}")
         except TelegramBadRequest:
@@ -350,6 +352,9 @@ async def history_handler(message: types.Message):
 async def persona_handler(message: types.Message):
     """Show or change the currently active persona (/persona [new_id])."""
     global PERSONA_ID
+    # this shit does not work how am i supposed to fix this :sob:
+    # it throws a 400 bad request error or something when i want to show the current persona
+    # oh dear benjamin netanyahu please find us the way to fetch a current persona
     
     args = message.text.split(maxsplit=1)
     if len(args) > 1:
@@ -410,9 +415,9 @@ async def chat_handler(message: types.Message):
         return
 
     if STREAMER_MODE:
-        logger.info("↑ [HIDDEN USER]: [HIDDEN IN STREAMER MODE]")
+        logger.info("^ [HIDDEN USER]: [HIDDEN IN STREAMER MODE]")
     else:
-        logger.info(f"↑ {message.from_user.id} (@{message.from_user.username}): "
+        logger.info(f"^ {message.from_user.id} (@{message.from_user.username}): "
                     f"{message.text[:60]}{'...' if len(message.text) > 60 else ''}")
 
     async with ChatActionSender.typing(bot=bot, chat_id=message.chat.id):
@@ -441,7 +446,7 @@ async def on_startup(bot: Bot):
     logger.info("The bot is waking up...")
     await init_cai()
     
-    # Register commands so they appear in Telegram's menu
+    # Register commands so they appear in Telegram's menu (it does not work anyway, why bother? but I still added this, who knows, might work for you? x)
     await bot.set_my_commands([
         BotCommand(command="start",   description="Show the character's greeting"),
         BotCommand(command="retry",   description="Re-roll their last reply 🔄"),
@@ -490,5 +495,3 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"[SYSTEM_NOTIFY:Critical Error] {str(e)}", flush=True)
         logger.error(f"Critical Error: {e}", exc_info=True)
-
-# just as a test if build is working...

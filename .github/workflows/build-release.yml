@@ -63,6 +63,14 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
 
+    - name: Inject Release Version
+      if: startsWith(github.ref, 'refs/tags/')
+      shell: bash
+      run: |
+        TAG_NAME=${GITHUB_REF_NAME#v}
+        echo "Injecting version $TAG_NAME into gui.py..."
+        python -c "import re; c = open('gui.py').read(); c = re.sub(r'VERSION = \".*?\"', f'VERSION = \"{TAG_NAME}\"', c); open('gui.py', 'w').write(c)"
+
     - name: Build with PyInstaller
       run: |
         pyinstaller --name CAI-TG --onefile --windowed gui.py

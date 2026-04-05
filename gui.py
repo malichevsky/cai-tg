@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 if len(sys.argv) > 1 and sys.argv[1] == "--bot":
     import asyncio
@@ -18,12 +19,189 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTabWidget, QLabel, QLineEdit, QPushButton, QComboBox,
     QTextEdit, QFormLayout, QMessageBox, QInputDialog, QToolButton,
-    QWizard, QWizardPage, QSpinBox, QCheckBox, QSystemTrayIcon, QStyle
+    QWizard, QWizardPage, QSpinBox, QCheckBox, QSystemTrayIcon, QStyle,
+    QFileDialog
 )
-from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor, QFont, QIcon
-from PyQt6.QtCore import QProcess, pyqtSlot, Qt, QProcessEnvironment
+from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor, QFont, QIcon, QDesktopServices
+from PyQt6.QtCore import QProcess, pyqtSlot, Qt, QProcessEnvironment, QTimer, QThread, pyqtSignal, QUrl
+import urllib.request
+import json
+
+VERSION = "1.2.0-dev"
+
+def is_newer_version(local, remote):
+    l_parts = local.lstrip('v').split('-')[0].split('.')
+    r_parts = remote.lstrip('v').split('-')[0].split('.')
+    for l, r in zip(l_parts, r_parts):
+        try:
+           if int(r) > int(l): return True
+           if int(r) < int(l): return False
+        except ValueError:
+           pass
+    return len(r_parts) > len(l_parts)
+
+class UpdateCheckerThread(QThread):
+    update_available = pyqtSignal(str, str)
+
+    def run(self):
+        try:
+            req = urllib.request.Request(
+                "https://api.github.com/repos/malichevsky/cai-tg/releases/latest", 
+                headers={'User-Agent': 'CAI-TG-Updater'}
+            )
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode())
+                latest_version = data.get("tag_name", "")
+                url = data.get("html_url", "")
+                
+                if latest_version and is_newer_version(VERSION, latest_version):
+                    self.update_available.emit(latest_version, url)
+        except Exception:
+            pass
 
 PROFILES_DIR = Path("profiles")
+
+MODERN_DARK_THEME = """
+QWidget {
+    background-color: #1e1e1e;
+    color: #cccccc;
+    font-family: 'Segoe UI', Inter, Roboto, sans-serif;
+    font-size: 10pt;
+}
+QTabWidget::pane {
+    border: 1px solid #3c3c3c;
+    background-color: #252526;
+    border-radius: 4px;
+}
+QTabBar::tab {
+    background: #2d2d2d;
+    color: #9d9d9d;
+    padding: 8px 20px;
+    margin-right: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border: 1px solid #3c3c3c;
+    border-bottom: none;
+}
+QTabBar::tab:selected {
+    background: #252526;
+    color: #ffffff;
+    font-weight: bold;
+    border-top: 2px solid #007acc;
+}
+QTabBar::tab:hover:!selected {
+    background: #333333;
+    color: #cccccc;
+}
+QPushButton {
+    background-color: #0e639c;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #1177bb;
+}
+QPushButton:pressed {
+    background-color: #094771;
+}
+QPushButton:disabled {
+    background-color: #4d4d4d;
+    color: #888888;
+}
+QPushButton#newProfileBtn { background-color: #4CAF50; }
+QPushButton#newProfileBtn:hover { background-color: #388E3C; }
+QPushButton#deleteBtn { background-color: #f44336; }
+QPushButton#deleteBtn:hover { background-color: #d32f2f; }
+QPushButton#startBtn { background-color: #2196F3; padding: 10px 16px; font-size: 11pt; }
+QPushButton#startBtn:hover { background-color: #1976D2; }
+QPushButton#stopBtn { background-color: #f44336; padding: 10px 16px; font-size: 11pt; }
+QPushButton#stopBtn:hover { background-color: #d32f2f; }
+QPushButton#harBtn { background-color: #673AB7; padding: 8px; }
+QPushButton#harBtn:hover { background-color: #512DA8; }
+QPushButton#saveBtn { background-color: #FF9800; padding: 8px; }
+QPushButton#saveBtn:hover { background-color: #F57C00; }
+QToolButton {
+    background-color: #333333;
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 4px;
+    border: 1px solid #3c3c3c;
+}
+QToolButton:hover {
+    background-color: #444444;
+}
+QToolButton#helpBtn {
+    border-radius: 10px;
+}
+QLineEdit, QTextEdit, QSpinBox, QComboBox {
+    background-color: #3c3c3c;
+    color: #cccccc;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    padding: 6px;
+}
+QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QComboBox:focus {
+    border: 1px solid #007acc;
+    background-color: #444444;
+}
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+QComboBox QAbstractItemView {
+    background-color: #3c3c3c;
+    color: #cccccc;
+    selection-background-color: #007acc;
+}
+QCheckBox {
+    spacing: 5px;
+    color: white;
+}
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    background-color: #3c3c3c;
+    border: 1px solid #555555;
+    border-radius: 2px;
+}
+QCheckBox::indicator:checked {
+    background-color: #007acc;
+    border: 1px solid #007acc;
+}
+QScrollArea, QWizard {
+    background-color: #1e1e1e;
+}
+QLabel#requiredLabel {
+    color: #ffeb3b;
+    font-weight: bold;
+}
+QLabel#boldLabel {
+    font-weight: bold;
+}
+QScrollBar:vertical {
+    border: none;
+    background: #1e1e1e;
+    width: 14px;
+    margin: 0px 0px 0px 0px;
+}
+QScrollBar::handle:vertical {
+    background: #424242;
+    min-height: 20px;
+    border-radius: 7px;
+    margin: 2px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #4f4f4f;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}
+"""
 
 ENV_KEYS = {
     "TG_TOKEN": {"help": "Telegram Bot Token. Get this by chatting with @BotFather on Telegram and creating a new bot.\n\nREQUIRED", "type": "password"},
@@ -37,6 +215,46 @@ ENV_KEYS = {
     "STREAMER_MODE": {"help": "(Optional) Toggle this on to hide sensitive IDs and message content in the console.", "type": "bool"}
 }
 
+def extract_tokens_from_har(har_path):
+    try:
+        with open(har_path, "r", encoding="utf-8") as f:
+            har_data = json.load(f)
+            
+        cai_token = None
+        next_auth = None
+        
+        entries = har_data.get("log", {}).get("entries", [])
+        for entry in entries:
+            request = entry.get("request", {})
+            url = request.get("url", "")
+            if "character.ai" in url.lower() or "neo.character.ai" in url.lower():
+                headers = request.get("headers", [])
+                for header in headers:
+                    name = header.get("name", "").lower()
+                    value = header.get("value", "")
+                    if name == "authorization" and value.startswith("Token "):
+                        cai_token = value[6:]
+                    
+                    if name == "cookie":
+                        if "web_next_auth=" in value:
+                            parts = value.split(";")
+                            for p in parts:
+                                p = p.strip()
+                                if p.startswith("web_next_auth="):
+                                    next_auth = p[len("web_next_auth="):]
+                                    
+                cookies = request.get("cookies", [])
+                for cookie in cookies:
+                    if cookie.get("name") == "web_next_auth":
+                        next_auth = cookie.get("value")
+                
+            if cai_token and next_auth:
+                break
+                
+        return cai_token, next_auth
+    except Exception:
+        return None, None
+
 class PasswordInput(QWidget):
     def __init__(self, is_password=True):
         super().__init__()
@@ -44,7 +262,6 @@ class PasswordInput(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         
         self.line_edit = QLineEdit()
-        self.line_edit.setStyleSheet("QLineEdit { background-color: #3b3b3b; color: white; padding: 5px; }")
         
         self.is_password = is_password
         if self.is_password:
@@ -52,7 +269,6 @@ class PasswordInput(QWidget):
 
         self.btn_eye = QToolButton()
         self.btn_eye.setText("👁")
-        self.btn_eye.setStyleSheet("QToolButton { background-color: #555555; padding: 2px; }")
         
         if self.is_password:
             self.btn_eye.pressed.connect(self.show_text)
@@ -77,6 +293,50 @@ class PasswordInput(QWidget):
         
     def clear(self):
         self.line_edit.clear()
+
+class PageWelcome(QWizardPage):
+    def __init__(self):
+        super().__init__()
+        self.setTitle("Welcome to CAI-TG")
+        self.setSubTitle("A native bridge between Telegram and Character.AI")
+        
+        layout = QVBoxLayout(self)
+        inst = QLabel(
+            "<b>CAI-TG</b> runs a local bot on your machine that connects your Telegram account to Character.AI, allowing you to chat directly from Telegram.<br><br>"
+            "<b>SECURITY WARNING:</b><br>"
+            "This application handles highly sensitive session tokens that give full access to your Character.AI and Telegram accounts. Using modified or unofficial versions can result in your accounts being compromised.<br><br>"
+            "You must ensure that you downloaded this program from the <b>only reputable source</b>:<br>"
+            "<b>github.com/malichevsky/cai-tg</b>"
+        )
+        inst.setWordWrap(True)
+        layout.addWidget(inst)
+        
+        self.confirm_cb = QCheckBox("I confirm I installed this from malichevsky/cai-tg")
+        self.confirm_cb.setEnabled(False)
+        self.confirm_cb.stateChanged.connect(self.completeChanged)
+        layout.addWidget(self.confirm_cb)
+        
+        self.timer_label = QLabel("Please carefully read the warning. You can proceed in 10 seconds.")
+        self.timer_label.setStyleSheet("color: #ffb74d; font-weight: bold;")
+        layout.addWidget(self.timer_label)
+        
+        self.counter = 10
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_timer)
+        self.timer.start(1000)
+
+    def isComplete(self):
+        return self.confirm_cb.isChecked()
+
+    def update_timer(self):
+        self.counter -= 1
+        if self.counter > 0:
+            self.timer_label.setText(f"Please carefully read the warning. You can proceed in {self.counter} seconds.")
+        else:
+            self.timer.stop()
+            self.timer_label.setText("You may now proceed.")
+            self.timer_label.setStyleSheet("color: #81c784; font-weight: bold;")
+            self.confirm_cb.setEnabled(True)
 
 class PageTelegram(QWizardPage):
     def __init__(self):
@@ -118,15 +378,23 @@ class PageCAI(QWizardPage):
         
         layout = QVBoxLayout(self)
         inst = QLabel(
-            "1. Open <b>character.ai</b> in your browser and log in.<br>"
-            "2. Open Developer Tools (<code>F12</code> or Right Click -> Inspect).<br>"
-            "3. Go to the <b>Network</b> tab, refresh the page, and search for <code>chat/user</code>.<br>"
-            "4. Click the request, look at the <b>Request Headers</b>, and copy the <code>Authorization</code> token. (Paste in <b>CAI_TOKEN</b> below).<br><br>"
-            "5. Go to the <b>Storage</b> or <b>Application</b> tab.<br>"
-            "6. Expand Cookies for <code>character.ai</code> and find <code>web_next_auth</code>. Copy its value. (Paste in <b>NEXT_AUTH</b> below)."
+            "<b>Option A: Automatic (Recommended)</b><br>"
+            "1. Open <b>character.ai</b> and log in.<br>"
+            "2. Open Developer Tools (<code>F12</code>), go to the <b>Network</b> tab, and refresh.<br>"
+            "3. Right-click any request and select <b>Save all as HAR with content</b>.<br>"
+            "4. Click the button below.<br>"
+            "<i>(Disclaimer: The .HAR file is processed entirely locally on your computer. Your files and data are not sent anywhere, and your account remains perfectly safe.)</i><br><br>"
+            "<b>Option B: Manual</b><br>"
+            "1. Find a request like <code>chat/user</code>, copy the <code>Authorization</code> token for <b>CAI_TOKEN</b>.<br>"
+            "2. Under the Application/Storage tab, find the <code>web_next_auth</code> cookie for <b>NEXT_AUTH</b>."
         )
         inst.setWordWrap(True)
         layout.addWidget(inst)
+        
+        self.btn_har = QPushButton("🔍 Auto-Detect from .HAR File")
+        self.btn_har.setObjectName("harBtn")
+        self.btn_har.clicked.connect(self.load_from_har)
+        layout.addWidget(self.btn_har)
         
         form = QFormLayout()
         self.cai_edit = PasswordInput()
@@ -138,6 +406,44 @@ class PageCAI(QWizardPage):
         form.addRow("NEXT_AUTH:", self.next_edit)
 
         layout.addLayout(form)
+
+    def load_from_har(self):
+        reply = QMessageBox.warning(self, "Security Warning",
+            "HAR files contain highly sensitive session tokens that give full access to your Character.AI account.\n\n"
+            "NEVER share a HAR file with anyone else!\n\n"
+            "By continuing, you confirm you are using a legitimate copy of CAI-TG downloaded from the official source.\n\n"
+            "Do you want to proceed and select a HAR file?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
+            
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        path, _ = QFileDialog.getOpenFileName(self, "Select HAR File", "", "HAR Files (*.har);;JSON Files (*.json);;All Files (*)")
+        if not path:
+            return
+            
+        cai, nxt = extract_tokens_from_har(path)
+        if cai or nxt:
+            if cai: self.cai_edit.setText(cai)
+            if nxt: self.next_edit.setText(nxt)
+            QMessageBox.information(self, "Success", "Tokens extracted successfully!")
+            
+            del_reply = QMessageBox.question(self, "Delete HAR File?",
+                "It's highly recommended to delete the .har file from your computer now to protect your session tokens.\n\n"
+                "Would you like to securely delete the file now?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes)
+                
+            if del_reply == QMessageBox.StandardButton.Yes:
+                import os
+                try:
+                    os.remove(path)
+                    QMessageBox.information(self, "Deleted", "The HAR file has been securely deleted from your system.")
+                except Exception as e:
+                    QMessageBox.warning(self, "Error", f"Failed to delete file: {e}\n\nPlease delete it manually!")
+        else:
+            QMessageBox.warning(self, "Error", "Could not find Character.AI tokens in this file. Make sure you were logged in and refreshed the page.")
 
 class PageChar(QWizardPage):
     def __init__(self):
@@ -166,9 +472,8 @@ class OOBEWizard(QWizard):
         self.setWindowTitle("CAI-TG First-Time Setup")
         self.resize(700, 500)
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
-        # Apply dark theme
-        self.setStyleSheet("QWizard { background-color: #2b2b2b; color: white; } QLabel { color: white; }")
         
+        self.addPage(PageWelcome())
         self.addPage(PageTelegram())
         self.addPage(PageCAI())
         self.addPage(PageChar())
@@ -195,7 +500,6 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("CAI-TG Bot Manager")
         self.resize(850, 650)
-        self.setStyleSheet("QMainWindow { background-color: #2b2b2b; } QWidget { color: #ffffff; }")
 
         PROFILES_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -208,6 +512,20 @@ class MainWindow(QMainWindow):
         self.init_tray()
         self.init_ui()
         self.load_profiles()
+
+        self.update_thread = UpdateCheckerThread(self)
+        self.update_thread.update_available.connect(self.show_update_button)
+        self.update_thread.start()
+
+    def show_update_button(self, version, url):
+        self.btn_update.setText(f"🎁 Update Available! ({version})")
+        
+        # Disconnect any previously connected signals to avoid multiple tabs opening if somehow called multiple times
+        try: self.btn_update.clicked.disconnect() 
+        except TypeError: pass
+        
+        self.btn_update.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(url)))
+        self.btn_update.show()
 
     def init_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
@@ -225,38 +543,42 @@ class MainWindow(QMainWindow):
         
         top_layout.addWidget(QLabel("Profile:"))
         self.profile_combo = QComboBox()
-        self.profile_combo.setStyleSheet("QComboBox { background-color: #3b3b3b; padding: 5px; }")
         self.profile_combo.currentTextChanged.connect(self.on_profile_changed)
         top_layout.addWidget(self.profile_combo)
 
         self.btn_new_profile = QPushButton("New Profile")
-        self.btn_new_profile.setStyleSheet("background-color: #4CAF50; color: white;")
+        self.btn_new_profile.setObjectName("newProfileBtn")
         self.btn_new_profile.clicked.connect(self.create_profile)
         top_layout.addWidget(self.btn_new_profile)
 
         self.btn_delete_profile = QPushButton("Delete")
-        self.btn_delete_profile.setStyleSheet("background-color: #f44336; color: white;")
+        self.btn_delete_profile.setObjectName("deleteBtn")
         self.btn_delete_profile.clicked.connect(self.delete_profile)
         top_layout.addWidget(self.btn_delete_profile)
 
         top_layout.addStretch()
 
         self.btn_start = QPushButton("▶ Start Bot")
-        self.btn_start.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold; padding: 8px 16px;")
+        self.btn_start.setObjectName("startBtn")
         self.btn_start.clicked.connect(self.start_bot)
         top_layout.addWidget(self.btn_start)
 
         self.btn_stop = QPushButton("⏹ Stop Bot")
-        self.btn_stop.setStyleSheet("background-color: #f44336; color: white; padding: 8px 16px;")
+        self.btn_stop.setObjectName("stopBtn")
         self.btn_stop.setEnabled(False)
         self.btn_stop.clicked.connect(self.stop_bot)
         top_layout.addWidget(self.btn_stop)
+
+        self.btn_update = QPushButton("🎁 Update Available!")
+        self.btn_update.setObjectName("updateBtn")
+        self.btn_update.setStyleSheet("background-color: #9C27B0; font-weight: bold; color: white; padding: 10px 16px; font-size: 11pt; border-radius: 4px;")
+        self.btn_update.hide()
+        top_layout.addWidget(self.btn_update)
 
         main_layout.addLayout(top_layout)
 
         # --- Tabs ---
         self.tabs = QTabWidget()
-        self.tabs.setStyleSheet("QTabBar::tab { background: #3b3b3b; padding: 8px; margin: 2px; } QTabBar::tab:selected { background: #555555; font-weight: bold; }")
         main_layout.addWidget(self.tabs)
 
         self.init_console_tab()
@@ -272,7 +594,6 @@ class MainWindow(QMainWindow):
         font = QFont("Consolas", 10)
         font.setStyleHint(QFont.StyleHint.Monospace)
         self.console_output.setFont(font)
-        self.console_output.setStyleSheet("QTextEdit { background-color: #1e1e1e; color: #d4d4d4; }")
 
         layout.addWidget(self.console_output)
         self.tabs.addTab(console_widget, "Console")
@@ -292,12 +613,10 @@ class MainWindow(QMainWindow):
             
             if field_type == "bool":
                 widget = QCheckBox()
-                widget.setStyleSheet("QCheckBox { spacing: 5px; color: white; }")
             elif field_type == "number":
                 widget = QSpinBox()
                 widget.setRange(0, 100)
                 widget.setSuffix("%")
-                widget.setStyleSheet("QSpinBox { background-color: #3b3b3b; color: white; padding: 5px; }")
                 widget.setValue(25)
             else:
                 widget = PasswordInput(is_password=(field_type == "password"))
@@ -305,7 +624,7 @@ class MainWindow(QMainWindow):
             help_btn = QToolButton()
             help_btn.setText("?")
             help_btn.setToolTip(help_text)
-            help_btn.setStyleSheet("QToolButton { background-color: #555555; border-radius: 10px; padding: 4px; }")
+            help_btn.setObjectName("helpBtn")
             help_btn.clicked.connect(lambda checked, text=help_text, k=key: QMessageBox.information(self, f"Help: {k}", text))
             
             field_layout.addWidget(widget)
@@ -313,17 +632,22 @@ class MainWindow(QMainWindow):
 
             label = QLabel(key)
             if "REQUIRED" in help_text:
-                label.setStyleSheet("font-weight: bold; color: #ffeb3b;")
+                label.setObjectName("requiredLabel")
             else:
-                label.setStyleSheet("font-weight: bold;")
+                label.setObjectName("boldLabel")
                 
             form_layout.addRow(label, field_layout)
             self.settings_fields[key] = widget
 
         layout.addLayout(form_layout)
 
+        self.btn_har = QPushButton("🔍 Extract Tokens from .HAR File (Safe & Local)")
+        self.btn_har.setObjectName("harBtn")
+        self.btn_har.clicked.connect(self.load_from_har_settings)
+        layout.addWidget(self.btn_har)
+
         self.btn_save = QPushButton("Save Settings")
-        self.btn_save.setStyleSheet("background-color: #FF9800; color: white; padding: 8px;")
+        self.btn_save.setObjectName("saveBtn")
         self.btn_save.clicked.connect(self.save_settings)
         layout.addWidget(self.btn_save)
 
@@ -463,6 +787,50 @@ class MainWindow(QMainWindow):
             
         QMessageBox.information(self, "Success", "Settings saved successfully!")
 
+    def load_from_har_settings(self):
+        reply = QMessageBox.warning(self, "Security Warning",
+            "HAR files contain highly sensitive session tokens that give full access to your Character.AI account.\n\n"
+            "NEVER share a HAR file with anyone else!\n\n"
+            "By continuing, you confirm you are using a legitimate copy of CAI-TG downloaded from the official source.\n\n"
+            "Do you want to proceed and select a HAR file?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No)
+            
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+
+        path, _ = QFileDialog.getOpenFileName(self, "Select HAR File", "", "HAR Files (*.har);;JSON Files (*.json);;All Files (*)")
+        if not path:
+            return
+            
+        cai, nxt = extract_tokens_from_har(path)
+        updated = False
+        if cai and "CAI_TOKEN" in self.settings_fields:
+            self.settings_fields["CAI_TOKEN"].setText(cai)
+            updated = True
+        if nxt and "NEXT_AUTH" in self.settings_fields:
+            self.settings_fields["NEXT_AUTH"].setText(nxt)
+            updated = True
+            
+        if updated:
+            QMessageBox.information(self, "Success", "Tokens extracted successfully! Remember to click 'Save Settings'.")
+            
+            del_reply = QMessageBox.question(self, "Delete HAR File?",
+                "It's highly recommended to delete the .har file from your computer now to protect your session tokens.\n\n"
+                "Would you like to securely delete the file now?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.Yes)
+                
+            if del_reply == QMessageBox.StandardButton.Yes:
+                import os
+                try:
+                    os.remove(path)
+                    QMessageBox.information(self, "Deleted", "The HAR file has been securely deleted from your system.")
+                except Exception as e:
+                    QMessageBox.warning(self, "Error", f"Failed to delete file: {e}\n\nPlease delete it manually!")
+        else:
+            QMessageBox.warning(self, "Error", "Could not find Character.AI tokens in this file.")
+
     def start_bot(self):
         current = self.profile_combo.currentText()
         if not current:
@@ -491,6 +859,11 @@ class MainWindow(QMainWindow):
     def stop_bot(self):
         if self.bot_process.state() == QProcess.ProcessState.Running:
             self.append_log("--- Stopping bot... ---\n", color="yellow")
+            if os.name == 'nt':
+                # On Windows, terminate() sends a hard kill which bypasses Python's shutdown hooks.
+                # So we manually trigger the shutdown notification in the GUI.
+                # That is why we all hate Microslop Windows...
+                self.tray_icon.showMessage("CAI-TG Offline", "The bot is shutting down.", QSystemTrayIcon.MessageIcon.Information, 5000)
             self.bot_process.terminate() # Graceful exit
 
     # --- QProcess Handlers ---
@@ -538,9 +911,9 @@ class MainWindow(QMainWindow):
             fmt = QTextCharFormat()
             if is_err or "[ERROR]" in line or "[CRITICAL]" in line or "Traceback" in line:
                 fmt.setForeground(QColor("#ef5350")) # Red
-            elif "→ CAI:" in line:
+            elif "-> CAI:" in line:
                 fmt.setForeground(QColor("#4dd0e1")) # Cyan
-            elif "← CAI" in line:
+            elif "<- CAI" in line or "<- retry" in line:
                 fmt.setForeground(QColor("#81c784")) # Light Green
             elif "[WARNING]" in line:
                 fmt.setForeground(QColor("#ffb74d")) # Orange
@@ -569,6 +942,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setStyleSheet(MODERN_DARK_THEME)
     
     try:
         import aiogram

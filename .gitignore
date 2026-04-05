@@ -15,3 +15,19 @@ __pycache__/
 
 # API Reference
 api-ref/
+
+# Credentials & Sensitive
+*.har
+
+# Builds & Tests
+build/
+dist/
+*.spec
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store

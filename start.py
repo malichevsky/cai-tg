@@ -8,45 +8,7 @@ import os
 import sys
 import venv
 import subprocess
-import urllib.request
-import urllib.error
 from pathlib import Path
-
-REPO_FILES = [
-    "start.py",
-    "main.py",
-    "gui.py",
-    "requirements.txt",
-    "README.md",
-    ".gitignore"
-]
-RAW_BASE_URL = "https://raw.githubusercontent.com/malichevsky/cai-tg/main/"
-
-def update_repository(root_dir):
-    if "--no-update" in sys.argv:
-        print("Skipping update check (--no-update).")
-        return
-
-    # Check if we are in a git repository
-    if (root_dir / ".git").exists():
-        print("Checking for updates via Git...")
-        try:
-            subprocess.check_call(["git", "pull", "--quiet"], cwd=root_dir)
-            print("Successfully checked for updates via Git.")
-        except subprocess.CalledProcessError as e:
-             print(f"Failed to update repository: {e}")
-    else:
-        print("Checking for updates from GitHub...")
-        for file_name in REPO_FILES:
-            url = RAW_BASE_URL + file_name
-            file_path = root_dir / file_name
-            try:
-                response = urllib.request.urlopen(url, timeout=5)
-                content = response.read()
-                file_path.write_bytes(content)
-            except urllib.error.URLError as e:
-                print(f"Failed to download {file_name}: {e}")
-        print("Successfully updated files from GitHub.")
 
 def get_venv_paths(venv_dir):
     """Return the path to the python executable and bin/Scripts directory based on OS."""
@@ -62,14 +24,17 @@ def main():
     root_dir = Path(__file__).parent.absolute()
     os.chdir(root_dir)
     
-    update_repository(root_dir)
-    
     venv_dir = root_dir / ".venv"
     bin_dir, python_exe = get_venv_paths(venv_dir)
 
-    # Step 1. Create venv if it doesn't exist
-    if not venv_dir.exists():
-        print("Virtual environment not found. Creating .venv...")
+    # Step 1. Create venv if it doesn't exist or is broken
+    if not venv_dir.exists() or not os.path.exists(python_exe):
+        if venv_dir.exists():
+            print("Virtual environment appears broken. Recreating .venv...")
+            import shutil
+            shutil.rmtree(venv_dir, ignore_errors=True)
+
+        print("Creating virtual environment...")
         try:
             venv.create(venv_dir, with_pip=True)
             print("Successfully created virtual environment.")
