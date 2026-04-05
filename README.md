@@ -81,6 +81,7 @@ While chatting with your bot on Telegram, you can use these commands to manage t
 - `/pins` — List all pinned messages in the current CAI chat.
 - `/history` — Display the last 10 messages.
 - `/persona` — Display your active persona ID 🎭
+- `/status` — Display current status of the bot 📊
 - `/reset` — Forcefully start a brand-new chat.
 - `/help` — Display the list of all commands.
 
@@ -157,4 +158,4 @@ To make the script and the bot work you need to get the following tokens, here i
 - [ ] Fix `/persona` command because right now it produces an error. It should display the current persona ID and allow to change it.
 - [ ] Battle "hey, i'm back" when user sends `/start` commmand while having existing chat.
 - [ ] Maybe some new languages?
-- [ ] `/status` command to display current status of the bot from Telegram, useful when the user is away from the device and wants to check if the bot is still running without having to guess. It should display things like: current CAI character, model, persona etc., if the bot is connected to Telegram, if the bot is connected to Character.AI, if the bot is connected to the internet and all other QoL things.
+- [x] ~~`/status` command to display current status of the bot from Telegram, useful when the user is away from the device and wants to check if the bot is still running without having to guess. It should display things like: current CAI character, model, persona etc., if the bot is connected to Telegram, if the bot is connected to Character.AI, if the bot is connected to the internet and all other QoL things.~~

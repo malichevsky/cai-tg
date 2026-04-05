@@ -2,6 +2,8 @@ import asyncio
 import os
 import random
 import logging
+import time
+from datetime import timedelta
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, types, BaseMiddleware
 from aiogram.types import BotCommand
@@ -14,6 +16,8 @@ from PyCharacterAI import get_client
 import sys
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", stream=sys.stdout)
 logger = logging.getLogger(__name__)
+
+START_TIME = time.time()
 
 env_path = os.environ.get("PROFILE_ENV_PATH", ".env")
 load_dotenv(env_path)
@@ -386,6 +390,32 @@ async def persona_handler(message: types.Message):
         )
 
 
+@dp.message(Command("status"))
+async def status_handler(message: types.Message):
+    """Show the current session status (/status)."""
+    logger.info(f"/status from {message.from_user.id} (@{message.from_user.username})")
+    
+    cai_status = "✅ Connected" if cai_client and cai_chat_id else "❌ Not Connected"
+    voice_status = "✅ Enabled" if VOICE_ID else "❌ Disabled"
+    voice_prob = f"{int(VOICE_PROBABILITY * 100)}%" if VOICE_ID else "N/A"
+    
+    uptime_seconds = int(time.time() - START_TIME)
+    uptime_str = str(timedelta(seconds=uptime_seconds))
+    
+    status_text = (
+        "📊 *Session Status*\n\n"
+        f"*Character.AI*: {cai_status}\n"
+        f"*Character ID*: `{CHAR_ID}`\n"
+        f"*Chat ID*: `{cai_chat_id if cai_chat_id else 'None'}`\n"
+        f"*Persona ID*: `{PERSONA_ID if PERSONA_ID else 'None'}`\n\n"
+        f"*Voice*: {voice_status} (Chance: {voice_prob})\n"
+        f"*Streamer Mode*: {'✅ On' if STREAMER_MODE else '❌ Off'}\n"
+        f"*Uptime*: `{uptime_str}`\n"
+    )
+    
+    await message.answer(status_text, parse_mode="Markdown")
+
+
 @dp.message(Command("help"))
 async def help_handler(message: types.Message):
     await message.answer(
@@ -397,6 +427,7 @@ async def help_handler(message: types.Message):
         "/pins — list all pinned messages\n"
         "/history — last 10 messages\n"
         "/persona — show active persona 🎭\n"
+        "/status — show current session status 📊\n"
         "/reset — start a brand-new chat\n"
         "/help — this list",
         parse_mode="Markdown"
@@ -455,6 +486,7 @@ async def on_startup(bot: Bot):
         BotCommand(command="pins",    description="List all pinned messages"),
         BotCommand(command="history", description="Show last 10 messages"),
         BotCommand(command="persona", description="Show active persona 🎭"),
+        BotCommand(command="status",  description="Show current session status 📊"),
         BotCommand(command="reset",   description="Start a brand-new chat"),
         BotCommand(command="help",    description="Show all commands"),
     ])
