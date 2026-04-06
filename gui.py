@@ -23,7 +23,7 @@ from PyQt6.QtWidgets import (
     QFileDialog
 )
 from PyQt6.QtGui import QTextCursor, QTextCharFormat, QColor, QFont, QIcon, QDesktopServices
-from PyQt6.QtCore import QProcess, pyqtSlot, Qt, QProcessEnvironment, QTimer, QThread, pyqtSignal, QUrl
+from PyQt6.QtCore import QProcess, pyqtSlot, Qt, QProcessEnvironment, QTimer, QThread, pyqtSignal, QUrl, QSettings
 import urllib.request
 import json
 
@@ -195,6 +195,148 @@ QScrollBar::handle:vertical {
 }
 QScrollBar::handle:vertical:hover {
     background: #4f4f4f;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+    height: 0px;
+}
+"""
+
+MODERN_LIGHT_THEME = """
+QWidget {
+    background-color: #f5f5f5;
+    color: #333333;
+    font-family: 'Segoe UI', Inter, Roboto, sans-serif;
+    font-size: 10pt;
+}
+QTabWidget::pane {
+    border: 1px solid #cccccc;
+    background-color: #ffffff;
+    border-radius: 4px;
+}
+QTabBar::tab {
+    background: #e0e0e0;
+    color: #555555;
+    padding: 8px 20px;
+    margin-right: 2px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border: 1px solid #cccccc;
+    border-bottom: none;
+}
+QTabBar::tab:selected {
+    background: #ffffff;
+    color: #000000;
+    font-weight: bold;
+    border-top: 2px solid #007acc;
+}
+QTabBar::tab:hover:!selected {
+    background: #eeeeee;
+    color: #333333;
+}
+QPushButton {
+    background-color: #007acc;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+QPushButton:hover {
+    background-color: #005999;
+}
+QPushButton:pressed {
+    background-color: #004c80;
+}
+QPushButton:disabled {
+    background-color: #cccccc;
+    color: #888888;
+}
+QPushButton#newProfileBtn { background-color: #4CAF50; }
+QPushButton#newProfileBtn:hover { background-color: #388E3C; }
+QPushButton#deleteBtn { background-color: #f44336; }
+QPushButton#deleteBtn:hover { background-color: #d32f2f; }
+QPushButton#startBtn { background-color: #2196F3; padding: 10px 16px; font-size: 11pt; }
+QPushButton#startBtn:hover { background-color: #1976D2; }
+QPushButton#stopBtn { background-color: #f44336; padding: 10px 16px; font-size: 11pt; }
+QPushButton#stopBtn:hover { background-color: #d32f2f; }
+QPushButton#harBtn { background-color: #673AB7; padding: 8px; }
+QPushButton#harBtn:hover { background-color: #512DA8; }
+QPushButton#saveBtn { background-color: #FF9800; padding: 8px; }
+QPushButton#saveBtn:hover { background-color: #F57C00; }
+QToolButton {
+    background-color: #e0e0e0;
+    color: #333333;
+    border-radius: 4px;
+    padding: 4px;
+    border: 1px solid #cccccc;
+}
+QToolButton:hover {
+    background-color: #d0d0d0;
+}
+QToolButton#helpBtn {
+    border-radius: 10px;
+}
+QLineEdit, QTextEdit, QSpinBox, QComboBox {
+    background-color: #ffffff;
+    color: #333333;
+    border: 1px solid #aaaaaa;
+    border-radius: 4px;
+    padding: 6px;
+}
+QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QComboBox:focus {
+    border: 1px solid #007acc;
+    background-color: #ffffff;
+}
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+QComboBox QAbstractItemView {
+    background-color: #ffffff;
+    color: #333333;
+    selection-background-color: #007acc;
+}
+QCheckBox {
+    spacing: 5px;
+    color: #333333;
+}
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    background-color: #ffffff;
+    border: 1px solid #aaaaaa;
+    border-radius: 2px;
+}
+QCheckBox::indicator:checked {
+    background-color: #007acc;
+    border: 1px solid #007acc;
+}
+QScrollArea, QWizard {
+    background-color: #f5f5f5;
+}
+QLabel#requiredLabel {
+    color: #d84315;
+    font-weight: bold;
+}
+QLabel#boldLabel {
+    font-weight: bold;
+}
+QScrollBar:vertical {
+    border: none;
+    background: #f5f5f5;
+    width: 14px;
+    margin: 0px 0px 0px 0px;
+}
+QScrollBar::handle:vertical {
+    background: #cccccc;
+    min-height: 20px;
+    border-radius: 7px;
+    margin: 2px;
+}
+QScrollBar::handle:vertical:hover {
+    background: #bbbbbb;
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     border: none;
@@ -508,6 +650,27 @@ class OOBEWizard(QWizard):
         
         return name
 
+def apply_theme(*args):
+    from PyQt6.QtWidgets import QApplication
+    app_instance = QApplication.instance()
+    if not app_instance:
+        return
+        
+    settings = QSettings("CAITG", "BotManager")
+    user_theme = settings.value("theme", "System")
+    if user_theme == "Light":
+        app_instance.setStyleSheet(MODERN_LIGHT_THEME)
+    elif user_theme == "Dark":
+        app_instance.setStyleSheet(MODERN_DARK_THEME)
+    else:
+        try:
+            if app_instance.styleHints().colorScheme() == Qt.ColorScheme.Dark:
+                app_instance.setStyleSheet(MODERN_DARK_THEME)
+            else:
+                app_instance.setStyleSheet(MODERN_LIGHT_THEME)
+        except AttributeError:
+            app_instance.setStyleSheet(MODERN_DARK_THEME)
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -653,6 +816,27 @@ class MainWindow(QMainWindow):
             form_layout.addRow(label, field_layout)
             self.settings_fields[key] = widget
 
+        # --- Theme Override Toggle ---
+        theme_layout = QHBoxLayout()
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems(["System", "Dark", "Light"])
+        settings = QSettings("CAITG", "BotManager")
+        self.theme_combo.setCurrentText(settings.value("theme", "System"))
+        self.theme_combo.currentTextChanged.connect(self.on_theme_changed)
+        theme_layout.addWidget(self.theme_combo)
+        
+        help_btn = QToolButton()
+        help_btn.setText("?")
+        help_btn.setToolTip("Force the application to use a specific theme, or follow system preference.")
+        help_btn.setObjectName("helpBtn")
+        help_btn.clicked.connect(lambda checked: QMessageBox.information(self, "Help: Theme", "Force the application to use a specific theme, or follow system preference."))
+        theme_layout.addWidget(help_btn)
+        
+        theme_label = QLabel("App Theme")
+        theme_label.setObjectName("boldLabel")
+        form_layout.addRow(theme_label, theme_layout)
+        # -----------------------------
+
         layout.addLayout(form_layout)
 
         self.btn_har = QPushButton("🔍 Extract Tokens from .HAR File (Safe & Local)")
@@ -667,6 +851,11 @@ class MainWindow(QMainWindow):
 
         layout.addStretch()
         self.tabs.addTab(settings_widget, "Settings")
+
+    def on_theme_changed(self, new_theme):
+        settings = QSettings("CAITG", "BotManager")
+        settings.setValue("theme", new_theme)
+        apply_theme()
 
     def init_about_tab(self):
         about_widget = QWidget()
@@ -956,7 +1145,14 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyleSheet(MODERN_DARK_THEME)
+    
+    try:
+        hints = app.styleHints()
+        apply_theme()
+        hints.colorSchemeChanged.connect(apply_theme)
+    except AttributeError:
+        # Fallback for Qt < 6.5
+        apply_theme()
     
     try:
         import aiogram

@@ -73,7 +73,7 @@ To make the script and the bot work you need to get the following tokens, here i
 6. In the GUI, go to the **Settings** tab and click on "Extract from HAR" button.
    - If you are in the first time using the script, it will ask you to select the HAR file, select the HAR file you exported and click on "Extract" button.
    - If you are not in the first time using the script, it will extract the tokens and IDs from the HAR file and fill in the fields in the **Settings** tab.
-**Note**: This feature is experimental and may not work for all users. If it haven't found all the tokens, it is recommended to use a different browser like Firefox to extract HAR files, or you can manually copy the missing token and ID from the Developer Tools as described in the "How to get tokens?" section or HAR file.
+**Note**: This feature is experimental and may not work for all users. If it haven't found all the tokens, it is recommended to use a different browser like Firefox to extract HAR files, or you can manually copy the missing token and ID from the Developer Tools as described in the "How to get tokens?" section.
 
 ## How to update the script?
 
@@ -96,11 +96,11 @@ Any other suggestions, help, discussions or feature requests are also welcome, w
 
 ## Any support for mobile devices, like Android?
 
-Not yet, it is planned for the future. You can't use Termux to run this script because it requires a desktop environment to draw the GUI.
+Not yet, it is planned for the future. You can't use Termux to run this script because it requires a desktop environment to draw the GUI, however you can try Andronix to run Linux on Android and then run this script on it, though it is not recommended and may not work.
 
 ## Would I get banned for using this script?
 
-Even though no one has reported being banned for using this script (neither me), it is still against Character.AI's Terms of Service to use any third-party tools to interact with unofficial APIs we use. Use it at your own risk. Please, do not make any complaints to us if you get banned, because once you pressed "Continue" button in First Time Setup Wizard you automatically agree that you are using this script at your own risk and we are not responsible for any consequences. We are not affiliated with Character.AI in any way, neither the original author of PyCharacterAI. We do not condone the use of this script for any malicious or for any other purposes that may violate Character.AI's Terms of Service, such as bypassing NSFW filters, etc. If you fear that your account may get banned, we recommend you to use a different account specifically for this script, otherwise don't use it and stick to the official website.
+Even though no one has reported being banned for using this script (neither me), it is still against Character.AI's Terms of Service to use any third-party tools to interact with unofficial APIs we use. Use it at your own risk. Please, do not make any complaints to us if you get banned, because once you pressed "Continue" button in First Time Setup Wizard you automatically agree that you are using this script at your own risk and we are not responsible for any consequences. We are not affiliated with Character.AI in any way, neither the original author of PyCharacterAI. We do not condone the use of this script for any malicious or for any other purposes that may violate Character.AI's Terms of Service, such as bypassing NSFW filters, etc. If you fear that your account may get banned, we recommend you to use a different account specifically for this script, otherwise don't use it and stick to the official website. We warned you.
 
 ## Can I contribute to the project?
 

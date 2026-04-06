@@ -104,8 +104,9 @@ While chatting with your bot on Telegram, you can use these commands to manage t
 - [ ] Add support to recognize images sent from user and reply with images. (can stickers be recognized as images?)
 - [x] ~~Add support for multiple characters.~~
 - [ ] Support for Android devices??
-- [ ] Fix `/persona` command because right now it produces an error. It should display the current persona ID and allow to change it.
+- [ ] Fix `/persona` command because right now it produces an error. It should display the current persona ID.
 - [ ] Battle "hey, i'm back" when user sends `/start` commmand while having existing chat.
 - [ ] Maybe some new languages?
-- [x] ~~`/status` command to display current status of the bot from Telegram.~~
-- [ ] Add white theme for GUI and console, automatically switching between light and dark themes depending on the system settings.
+- [~] ~~`/status` command to display current status of the bot from Telegram.~~
+      Replace IDs with actual information in the status message. (e.g. Character name instead of character ID)
+- [x] ~~Add white theme for GUI and console, automatically switching between light and dark themes depending on the system settings.~~
